@@ -1,22 +1,25 @@
+/**
+ *Practicas de Javascript, se usa libreria de FullCalendar, Jquery, SweetAlert, Bootstrap
+ * pero para las funciones sera Javascript puro
+ *
+ * */
 
-
+//Funcion que recoge datos de Modal de Bootstrap para mostrarlos en panatlla
+//esta funcion sera para crear eventos
 function getInfo(date) {
     var name = document.getElementById("recipient-name").value;
     var textArea = document.getElementById("message-text").value;
-
     if(name == null || textArea == null || name.length == 0 || textArea.length == 0 || /^\s+$/.test(name) || /^\s+$/.test(textArea)){
         swal("Casillas no deben quedar en blanco");
-
         return false;
     }else {
         swal("Usted ingreso: "+name + " "+textArea+" Pronto ingresaremos mas funciones");
     }
-
-
-    document.getElementById("myForm").reset();
-    $('#exampleModal').appendTo("body").modal('hide');
+    document.getElementById("myForm").reset();//reseteamos formulario al enviarlo
+    $('#exampleModal').appendTo("body").modal('hide');//ocultamos modal de Bootstrap
 }
 
+//Inicializamos el Fullcalendar
 $(document).ready(function() {
     //pagina lista, inicializamos el calnedario
 
@@ -40,7 +43,7 @@ $(document).ready(function() {
         displayEventTime: true,
         displayEventEnd: true,
         selectable: true,
-        //selectOverlap: false,
+        //selectOverlap: true,
         slotEventOverlap: false,
         eventLimit: false,
         nowIndicator: true,
@@ -52,15 +55,15 @@ $(document).ready(function() {
         eventDrop: function(event, delta, revertFunc) {
 
             alert(event.title + " fue movido a la fecha " + event.start.format("DD/MM/YYYY, h:mm:ss")),
-
             /*if (!confirm("Desea realizar dicho cambio?")) {
                 revertFunc();
             }*/
+            //sweetalet para manejar la toma de desiciones
             swal("Desea realizar dicho cambio?", {
                 buttons: {
                     Si: true,
                     No: "No!"
-                },
+                }
             })
                 .then((value) => {
                 switch (value) {
@@ -76,57 +79,66 @@ $(document).ready(function() {
                     })
                     revertFunc()
                 }
-            });
-
+            })
         },
-        eventAllow: function(dropLocation, draggedEvent) {
+        eventResizeStop: function( event, jsEvent, ui, view, revertFunc ) {
+            alert(event.title + " fue fue estirado " + event.end.format("DD/MM/YYYY, h:mm:ss"));
+                if (!confirm("Desea realizar dicho cambio?")) {
+                 revertFunc();
+                 }
+        },
+        /*eventDragStop: function( event, jsEvent, ui, view, businessHours ) {
+            if(event==businessHours){
+                alert("hola");
+            }
+        },*/
+        /*eventAllow: function(dropLocation, draggedEvent) {
             if (draggedEvent.id === '999') {
                 return String(dropLocation.resourceId).indexOf('a') >= 0; // boolean
             }
             else {
                 return true;
             }
-        },
-
-        /*eventConstraint: {
-            id:999
         },*/
-        businessHours: {
+       eventConstraint: 'businessHours',
+        businessHours:
             // days of week. an array of zero-based day of week integers (0=Sunday)
-            dow: [ 1, 2, 3, 4, 5 ], // Monday - Thursday
-
+            //className: 'fc-nonbusiness',//clase a modificar
+            /*dow: [ 1, 2, 3, 4, 5 ], // Monday - Friday
             start: '12:00', // a start time (10am in this example)
-            end: '13:00' // an end time (6pm in this example)
-        },
+            end: '13:00' // an end time (6pm in this example)*/
+
+            [ //Especificamos el horario no laborable paa el medio dia
+                {
+                    dow: [ 1, 2, 3, 4, 5 ], // Monday, Tuesday, Wednesday
+                    start: '08:00', // 8am
+                    end: '12:00' // 12pm
+                },
+                {
+                    dow: [1, 2, 3, 4, 5], // Thursday, Friday
+                    start: '13:00', // 13pm
+                    end: '18:00' // 6pm
+                }
+            ],
         events:[
-            {//editamos para colocar la hora del medio dia en gris
-                resourceId: 'a',
-                title: 'Descanso',
+            /*
                 className: 'fc-nonbusiness',//clase a modificar
-                start: '12:00',
-                end: '13:00',
-                dow: [1, 2, 3, 4, 5], // monday - thursday
                 rendering: 'background',
                 color: '#a4a79d'
-            },
+            */
             {
-            title: 'Cita por defecto',//titulo de cita
-            start: '2017-10-23T10:15',//inicio
-            end: '2017-10-23T12:00',//final
-            allDay: false,
-                resourceId: 'b', // start out in resource 'b'
-                constraint: {
-                    resourceIds: [ 'a', 'b', 'c' ] // constrain dragging to these
-                }
-        },
+                title: 'Cita por defecto',//titulo de cita
+                start: '2017-10-23T10:15',//inicio
+                end: '2017-10-23T12:00',//final
+                allDay: false
+            },
             {
                 title: 'Otra Cita por defecto',//titulo de cita
                 start: '2017-10-24T10:15:00',//inicio
                 end: '2017-10-24T12:0:00',//final
-                rendering: 'background',
-                resourceId: 'c'
+                rendering: 'background'
+                /*resourceId: 'c'*/
             },
-
             {
                 title:'prueba',
                 start: '2017-10-25T08:00',
@@ -137,6 +149,7 @@ $(document).ready(function() {
             {
                 title:'Sin End',
                 start:'2017-10-26T14:00',
+                end:'2017-10-26T16:00',
                 color: 'blue'
             }],
         eventColor: '#28cdd8',//color de los eventos
@@ -145,6 +158,7 @@ $(document).ready(function() {
         selectOverlap: function(event) {
             return event.rendering === 'background';
         },
+        //funcion para la seleccion de dias en calendario
         dayClick: function(date){
             swal("Desea crear un nuevo evento", {
                 buttons: {
@@ -172,11 +186,8 @@ $(document).ready(function() {
                 }
             });
         },
-        eventClick: function(date, event, element) {
-            /*event.title = "CLICKED!";
 
-            $('#calendar').fullCalendar('updateEvent', event);*/
-            //variable para obtener la fecha y hora exacta
+        eventClick: function(date, event, element) {
             var moment = $('#calendar').fullCalendar('getDate');
             if(event){
                 swal("Desea editar el evento", {

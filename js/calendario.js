@@ -27,11 +27,6 @@ $(document).ready(function() {
             center: 'title',//por defecto es fecha dependiendo de la vista
             right: 'agendaDay, agendaWeek, month'//lado derecho boton month,agendaWeek,agendaDay
         },
-        /*businessHours: {
-         // days of week. an array of zero-based day of week integers (0=Sunday)
-         start: '12:00', // a start time (10am in this example)
-         end: '13:00' // an end time (6pm in this example)
-         },*/
         defaultView: 'agendaWeek',//vista por defecto
         lang:'es',//lenguaje
         allDaySlot: false,//quita espacio de allday
@@ -41,23 +36,115 @@ $(document).ready(function() {
         navLinks: true,//habilita enlaces
         editable: true,//permite mover o estirar
         eventStartEditable: true,
-        events:[{
-            title: 'Cita por defecto',//titulo de cita
-            start: '2017-10-23T10:15:00',//inicio
-            end: '2017-10-23T12:0:00'//final
+        dragRevertDuration: 500,
+        displayEventTime: true,
+        displayEventEnd: true,
+        selectable: true,
+        //selectOverlap: false,
+        slotEventOverlap: false,
+        eventLimit: false,
+        nowIndicator: true,
+        //selectConstraint: true,
+
+        /*eventDrop-Depositar Evento, funcion que maneja los casos de mover eventos de lugar con el mouse
+            con esat funcion puedes permitir o denegar movimientos de los eventos, revertilos si asi lo deseas
+        */
+        eventDrop: function(event, delta, revertFunc) {
+
+            alert(event.title + " fue movido a la fecha " + event.start.format("DD/MM/YYYY, h:mm:ss")),
+
+            /*if (!confirm("Desea realizar dicho cambio?")) {
+                revertFunc();
+            }*/
+            swal("Desea realizar dicho cambio?", {
+                buttons: {
+                    Si: true,
+                    No: "No!"
+                },
+            })
+                .then((value) => {
+                switch (value) {
+                case "Si":
+                    swal("Excelente!", "Movimiento exitoso!", "success",{
+                        timer:2000,
+                    });
+                    break;
+                default:
+                    swal("Cancelado!",{
+                        timer: 2000,
+
+                    })
+                    revertFunc()
+                }
+            });
+
         },
+        eventAllow: function(dropLocation, draggedEvent) {
+            if (draggedEvent.id === '999') {
+                return String(dropLocation.resourceId).indexOf('a') >= 0; // boolean
+            }
+            else {
+                return true;
+            }
+        },
+
+        /*eventConstraint: {
+            id:999
+        },*/
+        businessHours: {
+            // days of week. an array of zero-based day of week integers (0=Sunday)
+            dow: [ 1, 2, 3, 4, 5 ], // Monday - Thursday
+
+            start: '12:00', // a start time (10am in this example)
+            end: '13:00' // an end time (6pm in this example)
+        },
+        events:[
             {//editamos para colocar la hora del medio dia en gris
+                resourceId: 'a',
+                title: 'Descanso',
                 className: 'fc-nonbusiness',//clase a modificar
                 start: '12:00',
                 end: '13:00',
                 dow: [1, 2, 3, 4, 5], // monday - thursday
                 rendering: 'background',
-                color: '#a4a79d'//color del espacio seleccionado
+                color: '#a4a79d'
+            },
+            {
+            title: 'Cita por defecto',//titulo de cita
+            start: '2017-10-23T10:15',//inicio
+            end: '2017-10-23T12:00',//final
+            allDay: false,
+                resourceId: 'b', // start out in resource 'b'
+                constraint: {
+                    resourceIds: [ 'a', 'b', 'c' ] // constrain dragging to these
+                }
+        },
+            {
+                title: 'Otra Cita por defecto',//titulo de cita
+                start: '2017-10-24T10:15:00',//inicio
+                end: '2017-10-24T12:0:00',//final
+                rendering: 'background',
+                resourceId: 'c'
+            },
 
+            {
+                title:'prueba',
+                start: '2017-10-25T08:00',
+                end: '2017-10-25T10:00',
+                color: 'green',
+                dow: [1,2,3,4,5]
+            },
+            {
+                title:'Sin End',
+                start:'2017-10-26T14:00',
+                color: 'blue'
             }],
         eventColor: '#28cdd8',//color de los eventos
         eventBorderColor: '#4aaf57',
         eventTextColor: '#fff',
+        selectOverlap: function(event) {
+            return event.rendering === 'background';
+        },
         dayClick: function(date){
             swal("Desea crear un nuevo evento", {
                 buttons: {
@@ -78,11 +165,49 @@ $(document).ready(function() {
                     break;
 
                 default:
-                    swal("Cancelado!");
+                    swal("Cancelado!",{
+                        timer: 2000,
+                    });
 
                 }
             });
+        },
+        eventClick: function(date, event, element) {
+            /*event.title = "CLICKED!";
 
+            $('#calendar').fullCalendar('updateEvent', event);*/
+            //variable para obtener la fecha y hora exacta
+            var moment = $('#calendar').fullCalendar('getDate');
+            if(event){
+                swal("Desea editar el evento", {
+                    buttons: {
+                        Si: true,
+                        No: "Cancelar!",
+                        Fecha: 'Ver fecha seleccionada'
+                    },
+                })
+                    .then((value) => {
+                    switch (value) {
+
+                    case "Fecha":
+                        swal("La cita tiene fecha de " + moment.format());
+                        //swal("La cita tiene fecha de " + date.format("DD/MM/YYYY, h:mm:ss"));
+                        break;
+
+                    case "Si":
+                        swal("Excelente!", "Pronto se configurara esta opcion!", "success",{
+                            timer:2000,
+                        });
+                        //$('#exampleModal').appendTo("body").modal('show');
+                        break;
+
+                    default:
+                        swal("Cancelado!",{
+                            timer: 2000,
+                        });
+                    }
+                });
+            }
         }
     })
 });
